@@ -1,10 +1,17 @@
 extends CharacterBody3D
 
+# Emitted when the player jumps on the mob
+signal squashed
+
 # Minimum speed of the mob in meters per second
 @export var min_speed = 10
 
 # Maximum speed of the mob in meters per second
 @export var max_speed = 10
+
+func squash() -> void:
+	squashed.emit()
+	queue_free()
 
 func _physics_process(_delta: float) -> void:
 	move_and_slide()
