@@ -4,15 +4,15 @@ extends Node
 
 func _on_mob_timer_timeout() -> void:
 	# Create a new instance of the Mob scene
-	var mob = mob_scene.instantiate()
+	var mob: Node = mob_scene.instantiate()
 	
 	# Choose a random location on the SpawnPath. Store the reference
 	# to the SpawnLocation node.
-	var mob_spawn_location = get_node("SpawnPath/SpawnLocation")
+	var mob_spawn_location: Node = get_node("SpawnPath/SpawnLocation")
 	# Give a random offset
 	mob_spawn_location.progress_ratio = randf()
 	
-	var player_position = $Player.position
+	var player_position: Variant = $Player.position
 	mob.initialize(mob_spawn_location.position, player_position)
 	
 	# Spawn the mob
