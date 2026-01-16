@@ -6,9 +6,15 @@ extends CharacterBody3D
 # The downward acceleration when in the air, in meters per second
 @export var fall_acceleration = 75
 
+# Vertical impulse applied to the player upon jumping in meters per second
+@export var jump_impulse = 20
+
+# Vertical impulse applied to the player upon bouncing over a mob in meters per second
+@export var bounce_impulse = 16
+
 var target_velocity = Vector3.ZERO
 
-func _physics_process(delta: float):
+func _physics_process(delta: float) -> void:
 	# We create a local variable to store the input direction
 	var direction = Vector3.ZERO
 	
@@ -37,6 +43,36 @@ func _physics_process(delta: float):
 	# Vertical velocity
 	if not is_on_floor(): # If in the air, fall towards the floor. Literally gravity
 		target_velocity.y = target_velocity.y - (fall_acceleration * delta)
+		
+	# Jump!
+	if is_on_floor() and Input.is_action_just_pressed("jump"):
+		target_velocity.y = jump_impulse
+		
+	# Iterate through all collisions that have occurred this frame
+	for index: int in range(get_slide_collision_count()):
+		# Grab a collision with the player and the object the player collided with
+		var collision: KinematicCollision3D = get_slide_collision(index)
+		var collidedObject: Object = collision.get_collider()
+		
+		# Prevent duplicate collisions
+		if collidedObject == null:
+			continue
+			
+		var isCollidedObjectAMob: bool = collidedObject.is_in_group("mob")
+		if isCollidedObjectAMob:
+			var mob: Object = collidedObject
+			
+			# Check to see if the player landed on top of the mob.
+			# This can be finicky since the collider on the player is a sphere
+			# while the collider on the mob is a box. Other ways of fixing this
+			# would be to either make the player collision sphere smaller or
+			# make the mob collision box taller. In this case, I chose to increase
+			# the threshold for determining the downward collision
+			if Vector3.UP.dot(collision.get_normal()) > 0.75:
+				# "Squash" the mob, "bounce" the player up again, and stop the loop
+				mob.squash()
+				target_velocity.y = bounce_impulse
+				break;
 		
 	# Moving the character
 	velocity = target_velocity
